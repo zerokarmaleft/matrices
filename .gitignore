@@ -1,3 +1,12 @@
+# Gradle Files #
+/.gradle
+
+# Temporary Build Files #
+/build
+
+# Generated CSV Files #
+*-gen.txt
+
 *.class
 
 # Package Files #
