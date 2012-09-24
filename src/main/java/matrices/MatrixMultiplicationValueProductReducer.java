@@ -43,8 +43,8 @@ public class MatrixMultiplicationValueProductReducer
                                   mTuple.toString(),
                                   nTuple.toString());
 
-                double i    = mTuple.getSecond().get ();
-                double k    = nTuple.getSecond().get ();
+                long i      = (long) mTuple.getSecond().get ();
+                long k      = (long) nTuple.getSecond().get ();
                 double m_ij = mTuple.getThird ().get ();
                 double n_jk = nTuple.getThird ().get ();
 

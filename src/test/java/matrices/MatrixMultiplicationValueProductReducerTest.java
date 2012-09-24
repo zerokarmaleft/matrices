@@ -22,9 +22,9 @@ public class MatrixMultiplicationValueProductReducerTest {
                                              new DoubleTriplet (1, 0, 1),
                                              new DoubleTriplet (1, 1, 2)))
             .withOutput (new LongWritable (0),
-                         new Text ("1.0,0.0,1.0"))
+                         new Text ("1,0,1.0"))
             .withOutput (new LongWritable (0),
-                         new Text ("1.0,1.0,2.0"))
+                         new Text ("1,1,2.0"))
             .runTest ();
     }
 }

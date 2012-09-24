@@ -2,8 +2,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -23,12 +25,13 @@ public class MatrixMultiplication
             return -1;
         }
 
-        Job job = new Job (getConf (), "Multiply matrices P=MN");
+        Job job = new Job (getConf (), "Multiply matrix entries");
         job.setJarByClass (getClass ());
 
         Path mInputPath = new Path (args [0]);
         Path nInputPath = new Path (args [1]);
         Path outputPath = new Path (args [2]);
+        Path tempPath   = new Path ("/tmp/products");
 
         MultipleInputs.addInputPath (job,
                                      mInputPath,
@@ -38,14 +41,29 @@ public class MatrixMultiplication
                                      nInputPath,
                                      TextInputFormat.class,
                                      MatrixMultiplicationNMapper.class);
-        FileOutputFormat.setOutputPath (job, outputPath);
+        FileOutputFormat.setOutputPath (job, tempPath);
 
         job.setMapOutputKeyClass (LongWritable.class);
         job.setMapOutputValueClass (DoubleTriplet.class);
         job.setReducerClass (MatrixMultiplicationValueProductReducer.class);
         job.setOutputKeyClass (LongWritable.class);
 
-        return job.waitForCompletion (true) ? 0 : 1;
+        // first stage failed
+        if (!job.waitForCompletion (true)) return -1;
+
+        Job job2 = new Job (getConf (), "Sum matrix entries");
+        job2.setJarByClass (getClass ());
+
+        TextInputFormat.addInputPath (job2, tempPath);
+        FileOutputFormat.setOutputPath (job2, outputPath);
+
+        job2.setMapperClass (MatrixMultiplicationSumEntriesMapper.class);
+        job2.setMapOutputKeyClass (LongPair.class);
+        job2.setMapOutputValueClass (DoubleWritable.class);
+        job2.setReducerClass (MatrixMultiplicationSumEntriesReducer.class);
+        job2.setOutputKeyClass (DoubleWritable.class);
+
+        return job2.waitForCompletion (true) ? 0 : 1;
     }
 
     public static void main(String[] args) throws Exception {
